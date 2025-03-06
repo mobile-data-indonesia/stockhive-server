@@ -1,28 +1,33 @@
-package database
+package config
 
 import (
 	"fmt"
 	"sync"
 
+	"stockhive-server/internal/models"
+
 	"gorm.io/driver/postgres"
-	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var (
-	db   *gorm.DB
+	DB   *gorm.DB
 	once sync.Once
 )
 
 func ConnectDB() *gorm.DB {
 	once.Do(func() {
-		dsn := "host=localhost user=postgres password=yourpassword dbname=yourdb port=5432 sslmode=disable TimeZone=Asia/Jakarta"
+		dsn := "host=localhost user=postgres password=root dbname=stockhive port=5432 sslmode=disable TimeZone=Asia/Jakarta"
 		var err error
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
 			panic(fmt.Sprintf("Gagal koneksi ke database: %v", err))
 		}
+		fmt.Println("Berhasil koneksi ke database")
+
+		DB.AutoMigrate(&models.User{}, &models.Location{})
+		fmt.Println("Database Migrated")
 	})
 
-	return db
+	return DB
 }

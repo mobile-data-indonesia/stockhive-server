@@ -8,18 +8,30 @@ import (
 )
 
 type User struct {
-	UserID      uuid.UUID    `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"user_id"`
-	Role        string       `gorm:"not null" json:"role"`
-	CreatedAt   time.Time    `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time    `gorm:"autoUpdateTime" json:"updated_at"`
-
-	ItemsLoaned []ItemLoaned `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;" json:"items_loaned"`
-
-	AuthID uuid.UUID `gorm:"type:uuid" json:"auth_id"`
-	Auth   Auth      `gorm:"foreignKey:AuthID;constraint:OnDelete:CASCADE;" json:"auth"`
+	UserID          uuid.UUID      `gorm:"type:uuid;primaryKey" json:"user_id"`
+	Username        string         `gorm:"unique;not null" json:"username" binding:"required"`
+	Password        string         `gorm:"not null" json:"password" binding:"required"`
+	Email           string         `gorm:"unique" json:"email"`
+	PhoneNumber     string         `json:"phone_number" binding:"required"`
+	Title           string         `json:"title" binding:"required"`
+	Role            string         `gorm:"type:varchar(10);not null;default:'staff'" json:"role" binding:"required,oneof=staff admin"`
+	Department      string         `json:"department" binding:"required"`
+	ProfileImageURL string         `json:"profile_image_url"` 
+	LastLogin       *time.Time     `json:"last_login"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
-// Fungsi untuk migrasi tabel User
-func MigrateUser(db *gorm.DB) {
-	db.AutoMigrate(&User{})
+type UserLogin struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+    u.UserID = uuid.New()
+    if u.ProfileImageURL == "" {
+		u.ProfileImageURL = "default-profile.png" 
+	}
+    return nil
 }
