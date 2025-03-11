@@ -9,4 +9,5 @@ import (
 func UserRoute(r *gin.Engine) {
 	r.POST("/register", controllers.RegisterUser)
 	r.POST("/login", controllers.LoginUser)
+	r.POST("/refresh", controllers.RefreshToken)
 }

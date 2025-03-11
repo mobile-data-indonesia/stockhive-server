@@ -74,13 +74,13 @@ func LoginUser(c *gin.Context) {
         return
     }
 
-	accessToken, err := config.GenerateToken(user.Username, 15*time.Minute)
+	accessToken, err := config.GenerateToken(user.Username, 15*time.Minute, "access")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal generate access token"})
 		return
 	}
 
-	refreshToken, err := config.GenerateToken(user.Username, 168*time.Hour)
+	refreshToken, err := config.GenerateToken(user.Username, 168*time.Hour, "refresh")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal generate refresh token"})
 		return
@@ -90,4 +90,28 @@ func LoginUser(c *gin.Context) {
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
+}
+
+func RefreshToken(c *gin.Context) {
+	var refreshToken models.RefreshToken
+
+	if err := c.ShouldBindJSON(&refreshToken); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	claims, err := config.VerifyToken(refreshToken.Token, "refresh")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+		return
+	}
+
+	username := (*claims)["username"].(string)
+	newAccessToken, err := config.GenerateToken(username, 15*time.Minute, "access")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"access_token": newAccessToken})
 }
