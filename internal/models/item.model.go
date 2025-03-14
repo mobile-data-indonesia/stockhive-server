@@ -13,6 +13,7 @@ type Item struct {
 	ItemID              uuid.UUID          `gorm:"type:uuid;primaryKey" json:"item_id"`
 	ItemName            string             `gorm:"not null" json:"item_name"`
 	VendorName          string             `json:"vendor_name"`
+	ItemCategory          string            `json:"item_category"`
 	ItemImageURL        string             `json:"item_image_url"`
 	ItemLocationID      int                `gorm:"not null" json:"item_location_id"`
 	ItemLocation        Location           `gorm:"foreignKey:ItemLocationID" json:"item_location"`
