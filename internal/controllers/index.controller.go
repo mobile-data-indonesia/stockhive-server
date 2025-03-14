@@ -8,6 +8,6 @@ import (
 
 func Index(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Hello, World!",
+		"message": "Stockhive Server Api",
 	})
 }
