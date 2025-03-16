@@ -2,53 +2,39 @@ package controllers
 
 import (
 	"net/http"
-	"stockhive-server/internal/config"
 	"stockhive-server/internal/models"
-	"time"
-
-	"gorm.io/gorm"
+	"stockhive-server/internal/services"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
-func RegisterUser(c *gin.Context) {
-	var user models.User
+type UserController struct {
+	service services.UserService
+}
 
+func NewUserController(service services.UserService) *UserController {
+	return &UserController{service: service}
+}
+
+func (ctrl *UserController) Register(c *gin.Context) {
+	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
-	var existingUser models.User
-	if err := config.DB.Where("username = ? OR email = ?", user.Username, user.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Username or Email already registered"})
+	if err := ctrl.service.Register(&user); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-	user.Password = string(hashedPassword)
-
-	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User registered successfully",
-	})
+	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
 
-func LoginUser(c *gin.Context) {
+func (ctrl *UserController) Login(c *gin.Context) {
 	var req models.UserLogin
-	var user models.User
-	
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
@@ -57,32 +43,9 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	db := config.ConnectDB()
-	result := db.Where("username = ?", req.Username).First(&user)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Username tidak ditemukan"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses permintaan"})
-		return
-	}
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-        return
-    }
-
-	accessToken, err := config.GenerateToken(user.Username, 15*time.Minute, "access")
+	accessToken, refreshToken, err := ctrl.service.Login(req.Username, req.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal generate access token"})
-		return
-	}
-
-	refreshToken, err := config.GenerateToken(user.Username, 168*time.Hour, "refresh")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal generate refresh token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -92,24 +55,16 @@ func LoginUser(c *gin.Context) {
 	})
 }
 
-func RefreshToken(c *gin.Context) {
-	var refreshToken models.RefreshToken
-
-	if err := c.ShouldBindJSON(&refreshToken); err != nil {
+func (ctrl *UserController) RefreshToken(c *gin.Context) {
+	var req models.RefreshToken
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	claims, err := config.VerifyToken(refreshToken.Token, "refresh")
+	newAccessToken, err := ctrl.service.RefreshToken(req.Token)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
-		return
-	}
-
-	username := (*claims)["username"].(string)
-	newAccessToken, err := config.GenerateToken(username, 15*time.Minute, "access")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
