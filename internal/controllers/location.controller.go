@@ -2,59 +2,58 @@ package controllers
 
 import (
 	"net/http"
-	"stockhive-server/internal/config"
 	"stockhive-server/internal/models"
+	"stockhive-server/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllLocations(c *gin.Context) {
-	var locations []models.Location
+type LocationController struct {
+	service services.LocationService
+}
 
-	if err := config.DB.Find(&locations).Error; err != nil {
+func NewLocationController(service services.LocationService) *LocationController {
+	return &LocationController{service}
+}
+
+func (ctl *LocationController) GetAll(c *gin.Context) {
+	locations, err := ctl.service.GetAllLocations()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch locations"})
 		return
 	}
-
 	c.JSON(http.StatusOK, locations)
 }
 
-func GetLocation(c *gin.Context) {
-	var location models.Location
-	// fmt.Println(c.Param("id"))
+func (ctl *LocationController) GetByID(c *gin.Context) {
 	id := c.Param("id")
-	// fmt.Println(id)
-	if err := config.DB.Where("location_id = ?", id).First(&location).Error; err != nil {
+	location, err := ctl.service.GetLocationByID(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Location not found"})
 		return
 	}
-
 	c.JSON(http.StatusOK, location)
 }
 
-func CreateLocation(c *gin.Context) {
+func (ctl *LocationController) Create(c *gin.Context) {
 	var location models.Location
-
 	if err := c.ShouldBindJSON(&location); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
-	if err := config.DB.Create(&location).Error; err != nil {
+	if err := ctl.service.CreateLocation(&location); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create location"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Location created successfully",
-	})
+	c.JSON(http.StatusCreated, gin.H{"message": "Location created successfully"})
 }
 
-func UpdateLocation(c *gin.Context) {
-	var location models.Location
+func (ctl *LocationController) Update(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := config.DB.Where("location_id = ?", id).First(&location).Error; err != nil {
+	location, err := ctl.service.GetLocationByID(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Location not found"})
 		return
 	}
@@ -64,25 +63,26 @@ func UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	config.DB.Save(&location)
+	if err := ctl.service.UpdateLocation(&location); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update location"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Location updated successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Location updated successfully"})
 }
 
-func DeleteLocation(c *gin.Context) {
-	var location models.Location
+func (ctl *LocationController) Delete(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := config.DB.Where("location_id = ?", id).First(&location).Error; err != nil {
+	location, err := ctl.service.GetLocationByID(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Location not found"})
 		return
 	}
 
-	config.DB.Delete(&location)
+	if err := ctl.service.DeleteLocation(&location); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete location"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Location deleted successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Location deleted successfully"})
 }
