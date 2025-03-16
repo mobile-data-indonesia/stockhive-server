@@ -2,29 +2,69 @@ package controllers
 
 import (
 	"net/http"
-	"stockhive-server/internal/config"
 	"stockhive-server/internal/models"
+	"stockhive-server/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func GetAllItems(c *gin.Context) {
-	var items []models.Item
+type ItemController struct {
+	service services.ItemService
+}
 
-	if err := config.DB.Preload("ItemLocation").Preload("Holder").Find(&items).Error; err != nil {
+func NewItemController(service services.ItemService) *ItemController {
+	return &ItemController{service}
+}
+
+func (ctl *ItemController) GetAll(c *gin.Context) {
+	items, err := ctl.service.GetAllItems()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch items"})
 		return
 	}
-
 	c.JSON(http.StatusOK, items)
 }
 
-func GetItemByID(c *gin.Context) {
+func (ctl *ItemController) GetByID(c *gin.Context) {
 	id := c.Param("id")
-	var item models.Item
+	item, err := ctl.service.GetItemByID(id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Item not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, item)
+}
 
-	if err := config.DB.Preload("ItemLocation").Preload("Holder").First(&item, "item_id = ?", id).Error; err != nil {
+func (ctl *ItemController) Create(c *gin.Context) {
+	var item models.Item
+	if err := c.ShouldBindJSON(&item); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := ctl.service.CreateItem(&item); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, item)
+}
+
+func (ctl *ItemController) Update(c *gin.Context) {
+	id := c.Param("id")
+	var updated models.Item
+	if err := c.ShouldBindJSON(&updated); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	item, err := ctl.service.UpdateItem(id, updated)
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Item not found"})
 		} else {
@@ -36,62 +76,11 @@ func GetItemByID(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
-func CreateItem(c *gin.Context) {
-	var item models.Item
-
-	if err := c.ShouldBindJSON(&item); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if item.ItemLocationID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "item_location_id is required"})
-		return
-	}
-
-	if err := config.DB.Create(&item).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create item"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, item)
-}
-
-func UpdateItem(c *gin.Context) {
+func (ctl *ItemController) Delete(c *gin.Context) {
 	id := c.Param("id")
-	var item models.Item
-
-	if err := config.DB.First(&item, "item_id = ?", id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Item not found"})
-		return
-	}
-
-	var input models.Item
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if input.ItemLocationID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "item_location_id is required"})
-		return
-	}
-
-	if err := config.DB.Model(&item).Updates(input).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item"})
-		return
-	}
-
-	c.JSON(http.StatusOK, item)
-}
-
-func DeleteItem(c *gin.Context) {
-	id := c.Param("id")
-
-	if err := config.DB.Delete(&models.Item{}, "item_id = ?", id).Error; err != nil {
+	if err := ctl.service.DeleteItem(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete item"})
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{"message": "Item deleted successfully"})
 }
