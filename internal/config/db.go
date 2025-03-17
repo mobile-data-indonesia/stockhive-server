@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"sync"
-
+	"os"
 	"stockhive-server/internal/models"
+	"sync"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,7 +18,7 @@ var (
 //jenkins testtttttt banget ke 9
 func ConnectDB() *gorm.DB {
 	once.Do(func() {
-		dsn := "host=localhost user=postgres password=root dbname=stockhive port=5432 sslmode=disable TimeZone=Asia/Jakarta"
+		dsn := os.Getenv("DB_CONFIG")
 		var err error
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
