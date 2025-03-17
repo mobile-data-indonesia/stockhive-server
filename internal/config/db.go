@@ -15,7 +15,7 @@ var (
 	once sync.Once
 )
 
-//jenkins test
+//jenkins testttttt
 func ConnectDB() *gorm.DB {
 	once.Do(func() {
 		dsn := "host=localhost user=postgres password=root dbname=stockhive port=5432 sslmode=disable TimeZone=Asia/Jakarta"
