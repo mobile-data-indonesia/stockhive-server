@@ -8,7 +8,6 @@ pipeline {
         DEPLOY_PATH = "/home/mdi/stockhive"
         IMAGE_NAME = "stockhive"
         IMAGE_TAG = "latest"
-        USERNAME = "michaeltio"
     }
 
     stages {
@@ -30,9 +29,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'DOCKERHUB', variable: 'DOCKERHUB')]) {
                     sh """
-                        echo ${DOCKERHUB} | docker login --username {USERNAME} --password-stdin &&
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} {USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} &&
-                        docker push {USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                        echo ${DOCKERHUB} | docker login --username michaeltio --password-stdin &&
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} michaeltio/${IMAGE_NAME}:${IMAGE_TAG} &&
+                        docker push michaeltio/${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
             }
