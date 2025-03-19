@@ -51,11 +51,8 @@ pipeline {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'ENDSSH'
-                        cd ${DEPLOY_PATH} &&
-                        docker compose pull &&
-                        docker compose up -d
-                    ENDSSH
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} \\
+                        'cd ${DEPLOY_PATH} && docker compose pull && docker compose up -d'
                     """
                 }
             }
