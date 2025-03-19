@@ -15,7 +15,7 @@ var (
 	once sync.Once
 )
 
-//jenkins testtttttt banget ke 10
+//jenkins testtttttt banget ke 1
 func ConnectDB() *gorm.DB {
 	once.Do(func() {
 		dsn := os.Getenv("DB_CONFIG")
