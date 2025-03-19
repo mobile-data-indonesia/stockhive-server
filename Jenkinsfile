@@ -6,6 +6,9 @@ pipeline {
         DEPLOY_USER = "mdi"
         SSH_KEY = "e4bfa090-50e0-428e-93e3-bb43fc9f1b19"
         DEPLOY_PATH = "/home/mdi/stockhive"
+        IMAGE_NAME = "stockhive"
+        IMAGE_TAG = "latest"
+        USERNAME = "michaeltio"
     }
 
     stages {
@@ -15,18 +18,44 @@ pipeline {
             }
         }
 
-        stage('Build') {
+       stage('Build Docker Image') {
             steps {
-                echo 'Building From Jenkins'
+                sh """
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                """
             }
         }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([string(credentialsId: 'DOCKERHUB', variable: 'DOCKERHUB')]) {
+                    sh """
+                        echo ${DOCKERHUB} | docker login --username {USERNAME} --password-stdin &&
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} {USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} &&
+                        docker push {USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+
+        stage('Send Docker Compose') {
+            steps {
+                sshagent (credentials: ["${SSH_KEY}"]) {
+                    sh """
+                    scp docker-compose.yml ${DEPLOY_USER}@${DEPLOY_SERVER}:${DEPLOY_PATH}
+                    """
+                }
+            }
+        }
+
         stage('Deploy via SSH') {
             steps {
                 sshagent (credentials: ["${SSH_KEY}"]) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'ENDSSH'
-                        cd ${DEPLOY_PATH}
-                        mkdir testingdirectory
+                        cd ${DEPLOY_PATH} &&
+                        docker compose pull &&
+                        docker compose up -d
                     ENDSSH
                     """
                 }
