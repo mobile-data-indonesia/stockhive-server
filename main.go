@@ -2,18 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"stockhive-server/cmd/server"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 
 	port := os.Getenv("PORT")
 	// fmt.Println("Server running on port: ", port)
