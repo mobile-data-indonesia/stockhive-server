@@ -15,7 +15,6 @@ var (
 	once sync.Once
 )
 
-//jenkins testtttttt banget ke 1
 func ConnectDB() *gorm.DB {
 	once.Do(func() {
 		dsn := os.Getenv("DB_CONFIG")
@@ -27,7 +26,7 @@ func ConnectDB() *gorm.DB {
 		fmt.Println("Berhasil koneksi ke database")
 
 		//migration put here
-		DB.AutoMigrate(&models.User{}, &models.Location{}, &models.Item{})
+		DB.AutoMigrate(&models.User{}, &models.Location{}, &models.Item{}, &models.Category{}, &models.Vendor{})
 		fmt.Println("Database Migrated")
 	})
 

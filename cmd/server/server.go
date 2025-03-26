@@ -16,6 +16,7 @@ func NewServer() *gin.Engine {
 	routes.UserRoute(r)
 	routes.LocationRoute(r)
 	routes.ItemRoute(r)
+	routes.VendorRoute(r)
 
 	return r
 }
