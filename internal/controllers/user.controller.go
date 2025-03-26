@@ -70,3 +70,20 @@ func (ctrl *UserController) RefreshToken(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"access_token": newAccessToken})
 }
+
+func (ctrl *UserController) ChangePassword(c *gin.Context) {
+	var req models.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	// Panggil service untuk mengganti password
+	err := ctrl.service.ChangePassword(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password berhasil diubah"})
+}

@@ -17,4 +17,5 @@ func UserRoute(r *gin.Engine) {
 	r.POST("/register", userController.Register)
 	r.POST("/login", userController.Login)
 	r.POST("/refresh", userController.RefreshToken)
+	r.POST("/change-password", userController.ChangePassword)
 }

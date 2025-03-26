@@ -14,6 +14,7 @@ type UserService interface {
 	Register(user *models.User) error
 	Login(username, password string) (string, string, error)
 	RefreshToken(token string) (string, error)
+	ChangePassword(req *models.ChangePasswordRequest) error
 }
 
 type userService struct {
@@ -78,4 +79,30 @@ func (s *userService) RefreshToken(token string) (string, error) {
 	}
 
 	return newAccessToken, nil
+}
+
+func (s *userService) ChangePassword(req *models.ChangePasswordRequest) error {
+	user, err := s.repo.FindByUsername(req.Username)
+	if err != nil {
+		return errors.New("username not found")
+	}
+
+	// Verifikasi password lama
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.CurrentPassword)); err != nil {
+		return errors.New("invalid current password")
+	}
+
+	// Pastikan password baru sesuai dengan konfirmasi password
+	if req.NewPassword != req.ConfirmPassword {
+		return errors.New("new password and confirm password do not match")
+	}
+
+	// Hash password baru
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	// Update password di database
+	return s.repo.UpdatePassword(user, string(hashedPassword))
 }

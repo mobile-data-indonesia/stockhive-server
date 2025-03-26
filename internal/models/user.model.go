@@ -35,3 +35,10 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	}
     return nil
 }
+
+type ChangePasswordRequest struct {
+	Username 		 string `json:"username" binding:"required"`
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
+}

@@ -11,6 +11,7 @@ type UserRepository interface {
 	FindByUsernameOrEmail(username, email string) (*models.User, error)
 	CreateUser(user *models.User) error
 	FindByUsername(username string) (*models.User, error)
+	UpdatePassword(user *models.User, newPassword string) error
 }
 
 type userRepository struct {
@@ -43,4 +44,8 @@ func (r *userRepository) FindByUsername(username string) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) UpdatePassword(user *models.User, newPassword string) error {
+	return r.db.Model(user).Update("password", newPassword).Error
 }

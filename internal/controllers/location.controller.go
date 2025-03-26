@@ -86,3 +86,5 @@ func (ctl *LocationController) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Location deleted successfully"})
 }
+
+
