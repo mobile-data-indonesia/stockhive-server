@@ -27,9 +27,26 @@ func NewUserService(repo repositories.UserRepository) UserService {
 
 func (s *userService) Register(user *models.User) error {
 	// Cek apakah user sudah ada
-	_, err := s.repo.FindByUsernameOrEmail(user.Username, user.Email)
+	// _, err := s.repo.FindByUsernameOrEmail(user.Username, user.Email)
+	// if err == nil  {
+	// 	return errors.New("username or email already registered")
+	// }
+	// if err == nil && user.Email == "" {
+	// 	return errors.New("username already registered")
+	// }
+
+	// Cek apakah email sudah ada
+	if user.Email != "" {
+		_, err := s.repo.FindByEmail(user.Email)
+		if err == nil {
+			return errors.New("email already registered")
+		}
+	}
+
+	//cek apakah username sudah ada
+	_, err := s.repo.FindByUsername(user.Username)
 	if err == nil {
-		return errors.New("username or email already registered")
+		return errors.New("username already registered")
 	}
 
 	// Hash password

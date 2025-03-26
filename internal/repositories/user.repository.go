@@ -8,7 +8,8 @@ import (
 )
 
 type UserRepository interface {
-	FindByUsernameOrEmail(username, email string) (*models.User, error)
+	// FindByUsernameOrEmail(username, email string) (*models.User, error)
+	FindByEmail(email string) (*models.User, error)
 	CreateUser(user *models.User) error
 	FindByUsername(username string) (*models.User, error)
 	UpdatePassword(user *models.User, newPassword string) error
@@ -24,9 +25,28 @@ func NewUserRepository() UserRepository {
 	}
 }
 
-func (r *userRepository) FindByUsernameOrEmail(username, email string) (*models.User, error) {
+// func (r *userRepository) FindByUsernameOrEmail(username, email string) (*models.User, error) {
+// 	var user models.User
+// 	err := r.db.Where("username = ? OR email = ?", username, email).First(&user).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &user, nil
+// }
+
+// func (r *userRepository) FindByUsername(username string) (*models.User, error) {
+// 	var user models.User
+// 	err := r.db.Where("username = ?", username).First(&user).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &user, nil
+// }
+
+func (r *userRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
-	err := r.db.Where("username = ? OR email = ?", username, email).First(&user).Error
+
+	err := r.db.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

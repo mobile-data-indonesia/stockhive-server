@@ -11,7 +11,7 @@ type User struct {
 	UserID          uuid.UUID      `gorm:"type:uuid;primaryKey" json:"user_id"`
 	Username        string         `gorm:"unique;not null" json:"username" binding:"required"`
 	Password        string         `gorm:"not null" json:"password" binding:"required"`
-	Email           string         `gorm:"unique" json:"email"`
+	Email           string         `json:"email"`
 	PhoneNumber     string         `json:"phone_number" binding:"required"`
 	Title           string         `json:"title" binding:"required"`
 	Role            string         `gorm:"type:varchar(10);not null;default:'staff'" json:"role" binding:"required,oneof=staff admin"`
