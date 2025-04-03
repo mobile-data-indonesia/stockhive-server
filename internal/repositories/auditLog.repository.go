@@ -19,13 +19,13 @@ func NewAuditLogRepository() AuditLogRepository {
 
 func (r *auditLogRepository) FindAll() ([]models.AuditLog, error) {
 	var auditLogs []models.AuditLog
-	err := config.DB.Find(&auditLogs).Error
+	err := config.DB.Preload("Auditor").Find(&auditLogs).Error
 	return auditLogs, err
 }
 
 func (r *auditLogRepository) FindByID(id string) (models.AuditLog, error) {
 	var auditLog models.AuditLog
-	err := config.DB.Where("audit_id = ?", id).First(&auditLog).Error
+	err := config.DB.Preload("Auditor").Where("audit_id = ?", id).First(&auditLog).Error
 	return auditLog, err
 }
 
