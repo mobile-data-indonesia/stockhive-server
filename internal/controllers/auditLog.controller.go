@@ -45,7 +45,7 @@ func (ctl *AuditLogController) Create(c *gin.Context) {
 	}
 
 	if err := ctl.service.CreateAuditLog(&auditLog); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create audit log"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
