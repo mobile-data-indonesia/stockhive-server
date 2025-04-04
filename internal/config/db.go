@@ -26,7 +26,13 @@ func ConnectDB() *gorm.DB {
 		fmt.Println("Berhasil koneksi ke database")
 
 		//migration put here
-		DB.AutoMigrate(&models.User{}, &models.Location{}, &models.Item{}, &models.Category{}, &models.Vendor{}, &models.AuditLog{})
+		DB.AutoMigrate(&models.User{})
+		DB.AutoMigrate(&models.Location{})
+		DB.AutoMigrate(&models.Item{})
+		DB.AutoMigrate(&models.Vendor{})
+		DB.AutoMigrate(&models.Category{})
+		DB.AutoMigrate(&models.AuditLog{})
+
 		fmt.Println("Database Migrated")
 	})
 
