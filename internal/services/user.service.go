@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserService interface {
@@ -15,6 +16,11 @@ type UserService interface {
 	Login(username, password string) (string, string, error)
 	RefreshToken(token string) (string, error)
 	ChangePassword(req *models.ChangePasswordRequest) error
+	GetAllUsers() ([]models.User, error)
+	GetUserByID(id string) (models.User, error)
+	UpdateUser(id string, updated models.User) (models.User, error)
+	DeleteUser(id string) error
+
 }
 
 type userService struct {
@@ -23,6 +29,53 @@ type userService struct {
 
 func NewUserService(repo repositories.UserRepository) UserService {
 	return &userService{repo: repo}
+}
+
+func (s *userService) UpdateUser(id string, updated models.User) (models.User, error){
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return models.User{}, errors.New("user not found")
+		}
+		return models.User{}, err
+	}
+
+	err = s.repo.Update(&user, updated)
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (s *userService) DeleteUser(id string) error {
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("user not found")
+		}
+	}
+
+	return s.repo.Delete(&user)
+}
+
+
+func (s *userService) GetUserByID(id string) (models.User, error) {
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return models.User{}, errors.New("user not found")
+		}
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (s *userService) GetAllUsers() ([]models.User, error) {
+	users, err := s.repo.GetAllUsers()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func (s *userService) Register(user *models.User) error {

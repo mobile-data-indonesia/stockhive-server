@@ -13,6 +13,10 @@ type UserRepository interface {
 	CreateUser(user *models.User) error
 	FindByUsername(username string) (*models.User, error)
 	UpdatePassword(user *models.User, newPassword string) error
+	GetAllUsers() ([]models.User, error)
+	FindByID(id string) (models.User, error)
+	Delete(user *models.User) error
+	Update(user *models.User, updated models.User) error
 }
 
 type userRepository struct {
@@ -42,6 +46,33 @@ func NewUserRepository() UserRepository {
 // 	}
 // 	return &user, nil
 // }
+
+//repo to delete
+func (r *userRepository) Delete(user *models.User) error {
+	return r.db.Delete(user).Error
+}
+
+func (r *userRepository) Update(user *models.User, updated models.User) error {
+	return r.db.Model(user).Updates(updated).Error
+}
+
+func (r *userRepository) FindByID(id string) (models.User, error) {
+	var user models.User
+	err := r.db.Where("user_id = ?", id).First(&user).Error
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (r *userRepository) GetAllUsers() ([]models.User, error) {
+	var users []models.User
+	err := r.db.Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
 
 func (r *userRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User

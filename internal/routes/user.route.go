@@ -18,4 +18,8 @@ func UserRoute(r *gin.Engine) {
 	r.POST("/login", userController.Login)
 	r.POST("/refresh", userController.RefreshToken)
 	r.POST("/change-password", userController.ChangePassword)
+	r.GET("/users", userController.GetAllUsers)
+	r.PUT("/users/:id", userController.UpdateUser)
+	r.GET("/users/:id", userController.GetUserByID)
+	r.DELETE("/users/:id", userController.DeleteUser)
 }
