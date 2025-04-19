@@ -32,7 +32,8 @@ func ConnectDB() *gorm.DB {
 		DB.AutoMigrate(&models.Vendor{})
 		DB.AutoMigrate(&models.Category{})
 		DB.AutoMigrate(&models.AuditLog{})
-
+		DB.AutoMigrate(&models.ActivityLog{})
+		
 		fmt.Println("Database Migrated")
 	})
 
