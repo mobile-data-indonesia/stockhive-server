@@ -19,6 +19,7 @@ func NewServer() *gin.Engine {
 	routes.CategoryRoute(r)
 	routes.AuditLogRoute(r)
 	routes.ActivityLogRoute(r)
+	routes.ItemRequestRoute(r)
 
 	return r
 }
